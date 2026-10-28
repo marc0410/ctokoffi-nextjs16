@@ -1,12 +1,13 @@
 /** Edit your identity and public links here. No secrets belong in this file. */
 export const site = {
-  name: 'Kan Marc-Ephrem Koffi',
+  name: 'Koffi Kan Marc-Ephrem',
+  alternateName: 'Kan Marc-Ephrem Koffi',
   brand: 'koffi',
   year: 2026,
   impact: { users: 100000, volumeMillionsFCFA: 200 },
-  title: 'Koffi — CTO, Forward Deployed Engineer & AI Researcher',
+  title: 'Koffi Kan Marc-Ephrem — CTO, Forward Deployed Engineer & AI Engineer',
   description:
-    'Portfolio de Kan Marc-Ephrem Koffi : CTO, Forward Deployed Engineer et AI/ML Engineer. Produits, architectures évolutives et recherche en AI Safety.',
+    'Portfolio de Koffi Kan Marc-Ephrem, CTO et Forward Deployed Engineer à Abidjan : produits numériques, IA explicable, systèmes ML-RAG et architectures scalables.',
   email: 'koffikanmarcephrem@gmail.com',
   github: 'https://github.com/marc0410',
   linkedin: 'https://www.linkedin.com/in/marc-ephrem-koffi',

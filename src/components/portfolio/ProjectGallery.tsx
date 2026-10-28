@@ -5,6 +5,7 @@ import { Grip, ArrowLeft, ArrowRight, ExternalLink } from 'lucide-react';
 import { Arrow } from '@/components/ui/Arrow';
 import { ProjectArt } from './ProjectArt';
 import { projects } from '@/content/projects';
+import { projectPages } from '@/content/seo';
 import type { Project, CSSVariables } from '@/types/content';
 export function ProjectGallery({
   onOpen,
@@ -51,6 +52,9 @@ export function ProjectGallery({
                 className={filter === f ? 'active' : ''}
                 aria-pressed={filter === f}
                 onClick={() => setCategory(f)}
+                data-analytics-event="filter_projects"
+                data-analytics-category="project_filter"
+                data-analytics-label={f}
               >
                 {f}
                 {f === 'Tous' && <sup>{String(projects.length).padStart(2, '0')}</sup>}
@@ -99,6 +103,10 @@ export function ProjectGallery({
                 className="project-open"
                 onClick={() => onOpen(active)}
                 aria-label={`Découvrir le projet ${active.name}`}
+                data-analytics-event="project_modal_open"
+                data-analytics-category="portfolio"
+                data-analytics-label={active.name}
+                data-analytics-project={active.id}
               >
                 <Arrow size={24} />
               </button>
@@ -131,15 +139,26 @@ export function ProjectGallery({
                     href={active.url}
                     target="_blank"
                     rel="noreferrer"
+                    data-analytics-event="project_external_visit"
+                    data-analytics-category="portfolio"
+                    data-analytics-label={active.name}
+                    data-analytics-project={active.id}
                   >
                     VISITER LE SITE <ExternalLink size={12} />
                   </a>
                 ) : (
                   <span className="mono">{active.year}</span>
                 )}
-                <button className="text-link" onClick={() => onOpen(active)}>
-                  Explorer le projet <Arrow />
-                </button>
+                <a
+                  className="text-link"
+                  href={`/projets/${projectPages.find((p) => p.id === active.id)?.slug}`}
+                  data-analytics-event="case_study_click"
+                  data-analytics-category="portfolio"
+                  data-analytics-label={active.name}
+                  data-analytics-project={active.id}
+                >
+                  Lire l’étude de cas <Arrow />
+                </a>
               </div>
             </div>
           </motion.div>

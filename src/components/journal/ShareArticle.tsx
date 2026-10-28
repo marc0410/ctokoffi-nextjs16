@@ -17,6 +17,9 @@ export function ShareArticle() {
         onClick={copy}
         className="inline-flex items-center gap-2 rounded-full border border-black/20 px-4 py-2 text-xs transition-colors hover:bg-black/5"
         aria-label="Copier le lien de cet article"
+        data-analytics-event="share_article"
+        data-analytics-category="journal"
+        data-analytics-label="copy_link"
       >
         {status === 'copied' ? <Check size={14} /> : <Copy size={14} />}
         <span>{status === 'copied' ? 'Lien copié' : 'Partager'}</span>

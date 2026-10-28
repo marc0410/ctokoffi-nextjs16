@@ -34,7 +34,7 @@ npm ci
 npm run build:static
 ```
 
-Le résultat se trouve dans `out/`. Publiez tout son contenu, y compris `_next/`, les pages du journal, les ressources publiques, `robots.txt`, `sitemap.xml` et `404.html`.
+Le résultat se trouve dans `out/`. Publiez tout son contenu, y compris `_next/`, les pages À propos, Projets, Recherche, Journal et Contact, les ressources publiques, `robots.txt`, `sitemap.xml` et `404.html`.
 
 Le script active `output: 'export'` et `trailingSlash: true` uniquement pour cette compilation. Il fonctionne sur Windows, macOS et Linux sans syntaxe de variable d’environnement spécifique au shell. Les pages d’articles sont produites à partir de `generateStaticParams()`.
 
@@ -44,6 +44,6 @@ Un export statique ne peut pas exécuter des API serveur, des Server Actions, un
 
 ## Domaine et SEO
 
-Le domaine par défaut dans le code est `https://ctokoffi.me`. Changez `NEXT_PUBLIC_SITE_URL` si vous utilisez un autre domaine et reconstruisez le site. Le SEO comprend les métadonnées, les URL canoniques, les données structurées Person/BlogPosting, un sitemap et un fichier robots.
+Le domaine par défaut dans le code est `https://ctokoffi.me`. Changez `NEXT_PUBLIC_SITE_URL` si vous utilisez un autre domaine et reconstruisez le site. Le SEO comprend les métadonnées, les URL canoniques, les données structurées WebSite/Person/ProfilePage/CreativeWork/ScholarlyArticle/BlogPosting/BreadcrumbList, un sitemap et un fichier robots. Après le déploiement sur le domaine final, validez la propriété dans Google Search Console et Bing Webmaster Tools puis soumettez `https://ctokoffi.me/sitemap.xml`.
 
 Le fichier `robots.txt` autorise l’indexation : à adapter si vous publiez une version de test que vous souhaitez garder hors des moteurs. Un robots.txt ne remplace pas un contrôle d’accès.

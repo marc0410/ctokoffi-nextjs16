@@ -39,7 +39,9 @@ export function PublicationCards() {
                 <time>{p.date}</time>
               </div>
               <h3>
-                <a href={p.url} target="_blank" rel="noreferrer">
+                <a
+                  href={`/recherche/${p.id === 'constitutional-oversight' ? 'constitutional-oversight-ml-rag' : 'holistic-life-scoring'}`}
+                >
                   {p.title}
                 </a>
               </h3>
@@ -50,7 +52,24 @@ export function PublicationCards() {
                 ))}
               </div>
               <div className="paper-links">
-                <a href={p.url} target="_blank" rel="noreferrer" className="text-link">
+                <a
+                  href={`/recherche/${p.id === 'constitutional-oversight' ? 'constitutional-oversight-ml-rag' : 'holistic-life-scoring'}`}
+                  className="text-link"
+                  data-analytics-event="research_view"
+                  data-analytics-category="research"
+                  data-analytics-label={p.shortTitle}
+                >
+                  Lire le résumé <ArrowUpRight size={16} />
+                </a>
+                <a
+                  href={p.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-link"
+                  data-analytics-event="zenodo_click"
+                  data-analytics-category="research"
+                  data-analytics-label={p.shortTitle}
+                >
                   Lire sur Zenodo <ArrowUpRight size={16} />
                 </a>
                 <a
@@ -59,6 +78,9 @@ export function PublicationCards() {
                   rel="noreferrer"
                   className="paper-pdf"
                   aria-label={'Ouvrir le PDF ' + p.shortTitle}
+                  data-analytics-event="pdf_download"
+                  data-analytics-category="research"
+                  data-analytics-label={p.shortTitle}
                 >
                   <Download size={16} /> PDF
                 </a>

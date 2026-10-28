@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence, MotionConfig } from 'motion/react';
 import {
@@ -115,43 +116,37 @@ export default function Portfolio() {
         duration: 1,
         ease: 'power3.out',
       });
-      gsap.utils
-        .toArray<HTMLElement>('.reveal')
-        .forEach((el) =>
-          gsap.from(el, {
-            y: 34,
-            opacity: 0,
-            duration: 0.8,
-            ease: 'power2.out',
-            scrollTrigger: { trigger: el, start: 'top 91%', once: true },
-          }),
-        );
-      gsap.utils
-        .toArray<HTMLElement>('.kinetic-title')
-        .forEach((el) =>
-          gsap.from(el.querySelectorAll('.kinetic-word'), {
-            yPercent: 110,
-            rotate: 2,
-            opacity: 0,
-            duration: 0.85,
-            stagger: 0.065,
-            ease: 'power3.out',
-            scrollTrigger: { trigger: el, start: 'top 88%', once: true },
-          }),
-        );
-      gsap.utils
-        .toArray<HTMLElement>('.paper-art,.note-art')
-        .forEach((el) =>
-          gsap.fromTo(
-            el,
-            { backgroundPosition: '50% 0%' },
-            {
-              backgroundPosition: '50% 100%',
-              ease: 'none',
-              scrollTrigger: { trigger: el, start: 'top bottom', end: 'bottom top', scrub: 1 },
-            },
-          ),
-        );
+      gsap.utils.toArray<HTMLElement>('.reveal').forEach((el) =>
+        gsap.from(el, {
+          y: 34,
+          opacity: 0,
+          duration: 0.8,
+          ease: 'power2.out',
+          scrollTrigger: { trigger: el, start: 'top 91%', once: true },
+        }),
+      );
+      gsap.utils.toArray<HTMLElement>('.kinetic-title').forEach((el) =>
+        gsap.from(el.querySelectorAll('.kinetic-word'), {
+          yPercent: 110,
+          rotate: 2,
+          opacity: 0,
+          duration: 0.85,
+          stagger: 0.065,
+          ease: 'power3.out',
+          scrollTrigger: { trigger: el, start: 'top 88%', once: true },
+        }),
+      );
+      gsap.utils.toArray<HTMLElement>('.paper-art,.note-art').forEach((el) =>
+        gsap.fromTo(
+          el,
+          { backgroundPosition: '50% 0%' },
+          {
+            backgroundPosition: '50% 100%',
+            ease: 'none',
+            scrollTrigger: { trigger: el, start: 'top bottom', end: 'bottom top', scrub: 1 },
+          },
+        ),
+      );
       gsap.to('.hero-word', {
         yPercent: 15,
         opacity: 0.3,
@@ -208,7 +203,13 @@ export default function Portfolio() {
             <span className="location mono">
               <i /> ABIDJAN, CI
             </span>
-            <a className="contact-btn" href="#contact">
+            <a
+              className="contact-btn"
+              href="#contact"
+              data-analytics-event="cta_click"
+              data-analytics-category="header"
+              data-analytics-label="parlons_ensemble"
+            >
               Parlons ensemble <Arrow size={16} />
             </a>
             <button
@@ -230,14 +231,16 @@ export default function Portfolio() {
             </div>
             <div className="hero-main">
               <div className="hero-text">
-                <div className="hero-byline hero-reveal">
+                <h1 className="hero-byline hero-reveal">
                   <span className="tiny-plus">✳</span>
-                  <span>{site.name.toUpperCase()}</span>
-                </div>
-                <h1 className="hero-word">
+                  <span>
+                    {site.name.toUpperCase()} — CTO ET FORWARD DEPLOYED ENGINEER À ABIDJAN
+                  </span>
+                </h1>
+                <div className="hero-word" aria-label="Engineering tomorrow">
                   <span className="hero-reveal">Engineering</span>
                   <span className="hero-reveal accent">tomorrow.</span>
-                </h1>
+                </div>
                 <div className="hero-description hero-reveal">
                   <span className="mono hero-number">[01—∞]</span>
                   <div>
@@ -246,14 +249,31 @@ export default function Portfolio() {
                       <br />
                       Des produits utiles. Une IA digne de confiance.
                     </p>
+                    <p className="hero-seo-intro">
+                      Je conçois à Abidjan des produits numériques robustes, de l’architecture
+                      logicielle à l’intelligence artificielle explicable et aux systèmes ML-RAG.
+                    </p>
                     <span className="mono role-label">CTO · FORWARD DEPLOYED ENGINEER · AI/ML</span>
                   </div>
                 </div>
                 <div className="hero-cta hero-reveal">
-                  <a href="#projets" className="pill-btn primary">
+                  <a
+                    href="#projets"
+                    className="pill-btn primary"
+                    data-analytics-event="cta_click"
+                    data-analytics-category="hero"
+                    data-analytics-label="explorer_mes_projets"
+                  >
                     Explorer mes projets <ArrowDown size={17} />
                   </a>
-                  <a href={cv} download className="cv-link">
+                  <a
+                    href={cv}
+                    download
+                    className="cv-link"
+                    data-analytics-event="cv_download"
+                    data-analytics-category="hero"
+                    data-analytics-label="cv_hero"
+                  >
                     Mon CV <Download size={15} />
                   </a>
                 </div>
@@ -278,7 +298,13 @@ export default function Portfolio() {
               </div>
             </div>
             <div className="hero-bottom hero-reveal">
-              <a href="#projets" className="scroll-link mono">
+              <a
+                href="#projets"
+                className="scroll-link mono"
+                data-analytics-event="cta_click"
+                data-analytics-category="hero"
+                data-analytics-label="scroll_to_explore"
+              >
                 <span className="scroll-dot" /> SCROLL TO EXPLORE <ArrowDown size={13} />
               </a>
               <span className="hero-location mono">
@@ -291,6 +317,9 @@ export default function Portfolio() {
                 onClick={() => setQuiet(!quiet)}
                 aria-pressed={quiet}
                 aria-label={quiet ? 'Activer les animations' : 'Réduire les animations'}
+                data-analytics-event="motion_toggle"
+                data-analytics-category="accessibility"
+                data-analytics-label={quiet ? 'motion_off' : 'motion_on'}
               >
                 {quiet ? <Play size={13} /> : <Pause size={13} />}
                 <span>MOTION {quiet ? 'OFF' : 'ON'}</span>
@@ -315,6 +344,13 @@ export default function Portfolio() {
             </div>
             <span className="mono strip-year">2024 — 2026</span>
           </div>
+          <nav aria-label="Explorer le portfolio" className="seo-route-nav">
+            <Link href="/a-propos">À propos de Koffi Kan Marc-Ephrem</Link>
+            <Link href="/projets">Toutes les études de cas</Link>
+            <Link href="/recherche">Publications et recherche</Link>
+            <Link href="/journal">Articles du journal</Link>
+            <Link href="/contact">Contact</Link>
+          </nav>
           <Impact quiet={quiet} />
           <FieldEngineering quiet={quiet} />
           <ProjectGallery onOpen={setModal} quiet={quiet} />
@@ -489,6 +525,9 @@ export default function Portfolio() {
                     className="copy-btn"
                     onClick={copyEmail}
                     aria-label="Copier l’adresse e-mail"
+                    data-analytics-event="copy_email"
+                    data-analytics-category="contact"
+                    data-analytics-label="footer_email_copy"
                   >
                     {copied ? <Check size={17} /> : <Copy size={17} />}
                   </button>
@@ -500,7 +539,14 @@ export default function Portfolio() {
                         : ''}
                   </span>
                 </div>
-                <a href={cv} download className="pill-btn outline">
+                <a
+                  href={cv}
+                  download
+                  className="pill-btn outline"
+                  data-analytics-event="cv_download"
+                  data-analytics-category="contact"
+                  data-analytics-label="footer_cv_download"
+                >
                   Télécharger mon CV <Download size={16} />
                 </a>
               </div>
@@ -512,10 +558,24 @@ export default function Portfolio() {
               </a>
               <span className="mono copyright">© 2026 {site.name.toUpperCase()}</span>
               <div className="footer-socials">
-                <a href={site.github} target="_blank" rel="noreferrer">
+                <a
+                  href={site.github}
+                  target="_blank"
+                  rel="noreferrer"
+                  data-analytics-event="social_click"
+                  data-analytics-category="footer"
+                  data-analytics-label="github"
+                >
                   GitHub <Arrow size={14} />
                 </a>
-                <a href={site.linkedin} target="_blank" rel="noreferrer">
+                <a
+                  href={site.linkedin}
+                  target="_blank"
+                  rel="noreferrer"
+                  data-analytics-event="social_click"
+                  data-analytics-category="footer"
+                  data-analytics-label="linkedin"
+                >
                   LinkedIn <Arrow size={14} />
                 </a>
                 <a href="#accueil">Retour en haut ↑</a>

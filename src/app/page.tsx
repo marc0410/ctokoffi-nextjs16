@@ -5,11 +5,25 @@ export const metadata: Metadata = { alternates: { canonical: '/' } };
 export default function Home() {
   const person = {
     '@context': 'https://schema.org',
-    '@type': 'Person',
-    name: site.name,
-    jobTitle: 'CTO · Forward Deployed Engineer · AI/ML Engineer',
-    url: site.url,
-    sameAs: [site.github, site.linkedin],
+    '@graph': [
+      {
+        '@type': 'WebSite',
+        '@id': `${site.url}/#website`,
+        name: site.name,
+        url: site.url,
+        inLanguage: 'fr',
+      },
+      {
+        '@type': 'Person',
+        '@id': `${site.url}/#person`,
+        name: site.name,
+        alternateName: site.alternateName,
+        jobTitle: ['Chief Technology Officer', 'Forward Deployed Engineer', 'AI/ML Engineer'],
+        url: `${site.url}/a-propos`,
+        homeLocation: { '@type': 'Place', name: site.location },
+        sameAs: [site.github, site.linkedin],
+      },
+    ],
   };
   return (
     <>

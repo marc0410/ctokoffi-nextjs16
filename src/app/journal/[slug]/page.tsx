@@ -6,6 +6,7 @@ import { articles } from '@/content/journal';
 import { site } from '@/content/site';
 import { ReadingProgress } from '@/components/journal/ReadingProgress';
 import { ShareArticle } from '@/components/journal/ShareArticle';
+import { breadcrumbs, jsonLd } from '@/lib/seo';
 
 type Props = { params: Promise<{ slug: string }> };
 export const dynamicParams = false;
@@ -28,6 +29,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       authors: [site.name],
       images: ['/og.png'],
     },
+    twitter: {
+      card: 'summary_large_image',
+      title: article.title,
+      description: article.excerpt,
+      images: ['/og.png'],
+    },
   };
 }
 export default async function ArticlePage({ params }: Props) {
@@ -41,7 +48,15 @@ export default async function ArticlePage({ params }: Props) {
     '@type': 'BlogPosting',
     headline: article.title,
     description: article.excerpt,
-    author: { '@type': 'Person', name: site.name, url: site.url },
+    datePublished: '2026-10-28',
+    dateModified: '2026-10-28',
+    image: `${site.url}/og.png`,
+    author: {
+      '@type': 'Person',
+      '@id': `${site.url}/#person`,
+      name: site.name,
+      url: `${site.url}/a-propos`,
+    },
     url: `${site.url}/journal/${slug}`,
     inLanguage: 'fr',
     mainEntityOfPage: `${site.url}/journal/${slug}`,
@@ -49,9 +64,18 @@ export default async function ArticlePage({ params }: Props) {
   return (
     <main className="min-h-screen bg-[#eeeee4] text-[#2c3525] selection:bg-accent">
       <ReadingProgress />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(structured) }} />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structured).replace(/</g, '\\u003c') }}
+        dangerouslySetInnerHTML={{
+          __html: jsonLd(
+            breadcrumbs([
+              { name: 'Accueil', path: '/' },
+              { name: 'Journal', path: '/journal' },
+              { name: article.title, path: `/journal/${slug}` },
+            ]),
+          ),
+        }}
       />
       <header className="mx-auto flex max-w-4xl items-start justify-between gap-5 border-b border-black/15 px-6 py-7 md:px-12">
         <Link
@@ -74,8 +98,12 @@ export default async function ArticlePage({ params }: Props) {
             K
           </span>
           <div className="text-sm">
-            <span>{site.name}</span>
-            <p className="mt-1 text-xs text-[#8a9678]">{article.date} · Note personnelle</p>
+            <Link href="/a-propos" className="hover:underline">
+              {site.name}
+            </Link>
+            <p className="mt-1 text-xs text-[#8a9678]">
+              Publié le {article.date} · Mis à jour le {article.date}
+            </p>
           </div>
         </div>
         <p className="mt-9 text-xl leading-relaxed tracking-tight text-[#5a694a]">
@@ -91,6 +119,22 @@ export default async function ArticlePage({ params }: Props) {
         <blockquote className="my-12 border-l-2 border-[#8b72a8] pl-6 font-serif text-2xl leading-relaxed text-[#6d547d] italic">
           {article.takeaway}
         </blockquote>
+        <aside className="mb-10 border-t border-black/15 pt-6">
+          <h2 className="font-mono text-[10px] tracking-widest text-[#869771]">
+            PROJETS ET RECHERCHE ASSOCIÉS
+          </h2>
+          <div className="mt-5 flex flex-col gap-3 text-sm text-[#5e704b]">
+            <Link href="/projets/fvundi" className="hover:underline">
+              Étude de cas Fvundi : scoring de crédit explicable →
+            </Link>
+            <Link href="/recherche/constitutional-oversight-ml-rag" className="hover:underline">
+              Recherche sur la gouvernance ML-RAG →
+            </Link>
+            <Link href="/a-propos" className="hover:underline">
+              À propos de l’auteur →
+            </Link>
+          </div>
+        </aside>
         {article.sources && (
           <aside className="mb-10 border-t border-black/15 pt-6">
             <h2 className="mb-5 font-mono text-[10px] tracking-widest text-[#869771]">

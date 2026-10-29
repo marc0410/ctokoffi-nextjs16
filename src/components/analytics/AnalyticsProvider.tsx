@@ -9,13 +9,24 @@ import {
   trackPageView,
   trackScrollDepth,
 } from '@/lib/firebase-analytics';
+import { getDictionary } from '@/i18n/get-dictionary';
+import { locales, type Locale } from '@/i18n/config';
 
 type Choice = 'loading' | 'unset' | 'accepted' | 'rejected';
 const STORAGE_KEY = 'ctokoffi.analytics.consent.v1';
 const SCROLL_THRESHOLDS = [25, 50, 75, 90, 100];
 
 export function AnalyticsProvider() {
-  const pathname = usePathname();
+  const pathname = usePathname() || '/';
+
+  // Détection de la locale active
+  const segments = pathname.split('/').filter(Boolean);
+  const currentLocale: Locale =
+    segments.length > 0 && (locales as readonly string[]).includes(segments[0])
+      ? (segments[0] as Locale)
+      : 'fr';
+  const dict = getDictionary(currentLocale);
+
   const [choice, setChoice] = useState<Choice>('loading');
   const [showPreferences, setShowPreferences] = useState(false);
   const lastTrackedPath = useRef<string | null>(null);
@@ -223,9 +234,9 @@ export function AnalyticsProvider() {
         type="button"
         onClick={() => setShowPreferences(true)}
         className="fixed bottom-4 left-4 z-[999] rounded-full border border-white/20 bg-[#161a14]/90 backdrop-blur-md px-3.5 py-1.5 text-xs text-white/80 hover:text-white hover:border-white/40 shadow-lg transition-all"
-        title="Gérer le consentement des statistiques"
+        title={dict.cookies.preferencesBtn}
       >
-        Préférences cookies & analytics
+        {dict.cookies.preferencesBtn}
       </button>
     );
   }
@@ -234,13 +245,12 @@ export function AnalyticsProvider() {
   return (
     <section
       role="region"
-      aria-label="Choix des statistiques de fréquentation"
+      aria-label={dict.cookies.title}
       className="fixed inset-x-4 bottom-4 z-[1000] mx-auto max-w-xl rounded-2xl border border-[#c6d0bd]/40 bg-[#1e231b]/95 backdrop-blur-xl p-5 text-white shadow-2xl transition-all"
     >
-      <h2 className="text-base font-semibold text-[#f0f4ec]">Statistiques et métriques de fréquentation</h2>
+      <h2 className="text-base font-semibold text-[#f0f4ec]">{dict.cookies.title}</h2>
       <p className="mt-2 text-xs leading-relaxed text-[#c6d0bd]">
-        Avec votre accord, Firebase Analytics mesure les pages visitées, la profondeur de défilement (scroll),
-        les interactions avec les projets et le téléchargement du CV. Aucune donnée personnelle nominative n’est collectée.
+        {dict.cookies.description}
       </p>
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <button
@@ -248,16 +258,16 @@ export function AnalyticsProvider() {
           onClick={() => choose('accepted')}
           className="rounded-full bg-[#527d42] hover:bg-[#639951] px-5 py-2 text-xs font-semibold text-white transition-colors"
         >
-          Accepter
+          {dict.cookies.accept}
         </button>
         <button
           type="button"
           onClick={() => choose('rejected')}
           className="rounded-full border border-white/30 hover:border-white/60 px-5 py-2 text-xs font-medium text-white/90 transition-colors"
         >
-          Refuser
+          {dict.cookies.refuse}
         </button>
-        <span className="text-[11px] text-[#97a58e] ml-auto">Modifiable à tout moment</span>
+        <span className="text-[11px] text-[#97a58e] ml-auto">{dict.cookies.changeAnytime}</span>
       </div>
     </section>
   );

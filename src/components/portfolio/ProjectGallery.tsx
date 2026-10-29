@@ -1,63 +1,86 @@
 'use client';
+
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Grip, ArrowLeft, ArrowRight, ExternalLink } from 'lucide-react';
 import { Arrow } from '@/components/ui/Arrow';
 import { ProjectArt } from './ProjectArt';
-import { projects } from '@/content/projects';
+import { getLocalizedProjects } from '@/content/i18n-content';
 import { projectPages } from '@/content/seo';
+import { getDictionary } from '@/i18n/get-dictionary';
+import type { Locale } from '@/i18n/config';
 import type { Project, CSSVariables } from '@/types/content';
+
 export function ProjectGallery({
   onOpen,
   quiet,
+  locale = 'fr',
 }: {
   onOpen: (project: Project) => void;
   quiet: boolean;
+  locale?: Locale;
 }) {
-  const [filter, setFilter] = useState('Tous');
+  const projects = getLocalizedProjects(locale);
+  const dict = getDictionary(locale);
+
+  const [filter, setFilter] = useState('ALL');
   const [index, setIndex] = useState(0);
   const [direction, setDirection] = useState(1);
-  const filtered = projects.filter((p) => filter === 'Tous' || p.category === filter);
+
+  const filtered = projects.filter((p) => {
+    if (filter === 'ALL') return true;
+    if (filter === 'AI' || filter === 'IA') return p.category === 'IA';
+    if (filter === 'PRODUCT' || filter === 'PRODUIT') return p.category === 'Produit';
+    if (filter === 'WEB3') return p.category === 'Web3';
+    return true;
+  });
+
   const active = filtered[index] || filtered[0];
+
   const go = (delta: number) => {
     setDirection(delta);
     setIndex((i) => (i + delta + filtered.length) % filtered.length);
   };
+
   const setCategory = (v: string) => {
     setFilter(v);
     setIndex(0);
     setDirection(1);
   };
+
+  const categories = [
+    { key: 'ALL', label: dict.projects.filterAll },
+    { key: 'AI', label: locale === 'en' ? 'AI' : 'IA' },
+    { key: 'PRODUCT', label: locale === 'en' ? 'Product' : locale === 'es' ? 'Producto' : 'Produit' },
+    { key: 'WEB3', label: 'Web3' },
+  ];
+
   return (
     <section className="projects-section section-pad" id="projets">
       <div className="section-heading reveal">
         <div>
-          <span className="mono section-eyebrow">02 / SELECTED WORK</span>
+          <span className="mono section-eyebrow">{dict.projects.eyebrow}</span>
           <h2>
-            Des idées.
+            {dict.projects.titleLine1}
             <br />
-            <span className="muted">Du réel.</span>
+            <span className="muted">{dict.projects.titleLine2}</span>
           </h2>
         </div>
         <div className="section-heading-right">
-          <p>
-            De la première ligne de code
-            <br />
-            au produit entre les mains de milliers de personnes.
-          </p>
+          <p>{dict.projects.subtitle}</p>
           <div className="filter-bar" aria-label="Filtrer les projets">
-            {['Tous', 'IA', 'Produit', 'Web3'].map((f) => (
+            {categories.map((c) => (
               <button
-                key={f}
-                className={filter === f ? 'active' : ''}
-                aria-pressed={filter === f}
-                onClick={() => setCategory(f)}
+                key={c.key}
+                className={filter === c.key ? 'active' : ''}
+                aria-pressed={filter === c.key}
+                onClick={() => setCategory(c.key)}
                 data-analytics-event="filter_projects"
                 data-analytics-category="project_filter"
-                data-analytics-label={f}
+                data-analytics-label={c.label}
               >
-                {f}
-                {f === 'Tous' && <sup>{String(projects.length).padStart(2, '0')}</sup>}
+                {c.label}
+                {c.key === 'ALL' && <sup>{String(projects.length).padStart(2, '0')}</sup>}
               </button>
             ))}
           </div>
@@ -144,20 +167,20 @@ export function ProjectGallery({
                     data-analytics-label={active.name}
                     data-analytics-project={active.id}
                   >
-                    VISITER LE SITE <ExternalLink size={12} />
+                    {dict.projects.visitSite} <ExternalLink size={12} />
                   </a>
                 ) : (
                   <span className="mono">{active.year}</span>
                 )}
                 <a
                   className="text-link"
-                  href={`/projets/${projectPages.find((p) => p.id === active.id)?.slug}`}
+                  href={`/${locale}/projets/${projectPages.find((p) => p.id === active.id)?.slug}`}
                   data-analytics-event="case_study_click"
                   data-analytics-category="portfolio"
                   data-analytics-label={active.name}
                   data-analytics-project={active.id}
                 >
-                  Lire l’étude de cas <Arrow />
+                  {dict.projects.readCase} <Arrow />
                 </a>
               </div>
             </div>
@@ -166,7 +189,7 @@ export function ProjectGallery({
       </div>
       <div className="gallery-bottom">
         <span className="mono gallery-hint">
-          <Grip size={14} /> GLISSER POUR EXPLORER
+          <Grip size={14} /> {dict.projects.dragHint}
         </span>
         <div className="project-thumbs" aria-label="Choisir un projet">
           {filtered.map((p, i) => (
@@ -186,10 +209,10 @@ export function ProjectGallery({
           ))}
         </div>
         <div className="gallery-controls">
-          <button className="circle-btn" onClick={() => go(-1)} aria-label="Projet précédent">
+          <button className="circle-btn" onClick={() => go(-1)} aria-label={dict.projects.prevProject}>
             <ArrowLeft size={19} />
           </button>
-          <button className="circle-btn" onClick={() => go(1)} aria-label="Projet suivant">
+          <button className="circle-btn" onClick={() => go(1)} aria-label={dict.projects.nextProject}>
             <ArrowRight size={19} />
           </button>
         </div>

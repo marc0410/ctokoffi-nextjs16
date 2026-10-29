@@ -1,4 +1,5 @@
 'use client';
+
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
@@ -20,12 +21,14 @@ import {
   Layers,
   Globe,
 } from 'lucide-react';
-import { gsap, useGSAP } from '@/lib/animations';
-import { experience, skillGroups } from '@/content/projects';
-import { articles } from '@/content/journal';
 import { site } from '@/content/site';
+import { getDictionary } from '@/i18n/get-dictionary';
+import { getLocalizedExperiences, getLocalizedSkillGroups } from '@/content/i18n-content';
+import { articles } from '@/content/journal';
 import type { Project } from '@/types/content';
+import type { Locale } from '@/i18n/config';
 import { Arrow } from '@/components/ui/Arrow';
+import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { Preloader } from './Preloader';
 import { ProjectDialog } from './ProjectDialog';
 import { ProjectGallery } from './ProjectGallery';
@@ -33,20 +36,21 @@ import { Research } from './Research';
 import { Impact } from '@/components/sections/Impact';
 import { FieldEngineering } from '@/components/sections/FieldEngineering';
 import { Journal } from '@/components/sections/Journal';
+
 const Scene = dynamic(() => import('@/components/visuals/SplineScene'), {
   ssr: false,
   loading: () => <div className="scene-loading" />,
 });
 const ParticleField = dynamic(() => import('@/components/visuals/Particles'), { ssr: false });
+
 const email = site.email;
 const cv = site.cv;
-const links = [
-  ['projets', 'Projets'],
-  ['approche', 'Approche'],
-  ['recherche', 'Recherche'],
-  ['journal', 'Journal'],
-];
-export default function Portfolio() {
+
+export default function Portfolio({ locale = 'fr' }: { locale?: Locale }) {
+  const dict = getDictionary(locale);
+  const experience = getLocalizedExperiences(locale);
+  const skillGroups = getLocalizedSkillGroups(locale);
+
   const [quiet, setQuiet] = useState(false);
   const [intro, setIntro] = useState(true);
   const [introKey, setIntroKey] = useState(0);
@@ -61,6 +65,14 @@ export default function Portfolio() {
   const hero = useRef<HTMLElement>(null);
   const router = useRouter();
   const finishIntro = useCallback(() => setIntro(false), []);
+
+  const links = [
+    ['projets', dict.nav.projects],
+    ['approche', dict.nav.approach],
+    ['recherche', dict.nav.research],
+    ['journal', dict.nav.journal],
+  ];
+
   useEffect(() => {
     const media = window.matchMedia('(prefers-reduced-motion: reduce)');
     setQuiet(media.matches);
@@ -69,19 +81,23 @@ export default function Portfolio() {
     media.addEventListener('change', update);
     return () => media.removeEventListener('change', update);
   }, []);
+
   useEffect(() => {
     const slug = window.location.hash.startsWith('#journal/') ? window.location.hash.slice(9) : '';
-    if (articles.some((a) => a.slug === slug)) router.replace('/journal/' + slug);
-  }, [router]);
+    if (articles.some((a) => a.slug === slug)) router.replace(`/${locale}/journal/${slug}`);
+  }, [router, locale]);
+
   useEffect(() => {
     const observer = new IntersectionObserver(([e]) => setHeroVisible(e.isIntersecting));
     if (hero.current) observer.observe(hero.current);
     return () => observer.disconnect();
   }, []);
+
   useEffect(() => {
     document.documentElement.classList.toggle('quiet', quiet);
     return () => document.documentElement.classList.remove('quiet');
   }, [quiet]);
+
   useEffect(() => {
     const obs = new IntersectionObserver(
       (entries) => {
@@ -94,6 +110,7 @@ export default function Portfolio() {
     document.querySelectorAll('main section[id]').forEach((el) => obs.observe(el));
     return () => obs.disconnect();
   }, []);
+
   useEffect(() => {
     if (!menu) return;
     const handler = (e: KeyboardEvent) => {
@@ -102,61 +119,8 @@ export default function Portfolio() {
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [menu]);
-  useGSAP(
-    () => {
-      if (intro) return;
-      if (quiet) {
-        gsap.set('.hero-reveal,.reveal', { clearProps: 'all' });
-        return;
-      }
-      gsap.from('.hero-reveal', {
-        y: 45,
-        opacity: 0,
-        stagger: 0.1,
-        duration: 1,
-        ease: 'power3.out',
-      });
-      gsap.utils.toArray<HTMLElement>('.reveal').forEach((el) =>
-        gsap.from(el, {
-          y: 34,
-          opacity: 0,
-          duration: 0.8,
-          ease: 'power2.out',
-          scrollTrigger: { trigger: el, start: 'top 91%', once: true },
-        }),
-      );
-      gsap.utils.toArray<HTMLElement>('.kinetic-title').forEach((el) =>
-        gsap.from(el.querySelectorAll('.kinetic-word'), {
-          yPercent: 110,
-          rotate: 2,
-          opacity: 0,
-          duration: 0.85,
-          stagger: 0.065,
-          ease: 'power3.out',
-          scrollTrigger: { trigger: el, start: 'top 88%', once: true },
-        }),
-      );
-      gsap.utils.toArray<HTMLElement>('.paper-art,.note-art').forEach((el) =>
-        gsap.fromTo(
-          el,
-          { backgroundPosition: '50% 0%' },
-          {
-            backgroundPosition: '50% 100%',
-            ease: 'none',
-            scrollTrigger: { trigger: el, start: 'top bottom', end: 'bottom top', scrub: 1 },
-          },
-        ),
-      );
-      gsap.to('.hero-word', {
-        yPercent: 15,
-        opacity: 0.3,
-        ease: 'none',
-        scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true },
-      });
-    },
-    { scope: root, dependencies: [intro, quiet], revertOnUpdate: true },
-  );
-  async function copyEmail() {
+
+  const copyEmail = async () => {
     try {
       await navigator.clipboard.writeText(email);
       setCopied(true);
@@ -165,18 +129,24 @@ export default function Portfolio() {
     } catch {
       setCopyError(true);
     }
-  }
+  };
+
   const replay = () => {
     window.scrollTo({ top: 0, behavior: 'instant' });
-    setIntroKey((k) => k + 1);
     setIntro(true);
+    setIntroKey((k) => k + 1);
   };
+
   return (
     <MotionConfig reducedMotion={quiet ? 'always' : 'user'}>
-      <div ref={root} className="site-shell">
-        {intro && <Preloader key={introKey} done={finishIntro} />}
+      <div className="portfolio-root" ref={root}>
+        {intro && !quiet && <Preloader done={finishIntro} key={introKey} />}
         <a className="skip-link" href="#main">
-          Aller au contenu
+          {locale === 'en'
+            ? 'Skip to main content'
+            : locale === 'es'
+              ? 'Saltar al contenido principal'
+              : 'Passer au contenu principal'}
         </a>
         <header className="header">
           <a className="wordmark" href="#accueil" aria-label="Koffi — Accueil">
@@ -196,12 +166,16 @@ export default function Portfolio() {
               </a>
             ))}
             <a href="#contact" className="mobile-contact" onClick={() => setMenu(false)}>
-              Contact ↗
+              {dict.nav.contact} ↗
             </a>
+            <div className="pt-4 md:hidden">
+              <LanguageSwitcher />
+            </div>
           </nav>
           <div className="header-actions">
+            <LanguageSwitcher className="hidden md:inline-flex" />
             <span className="location mono">
-              <i /> ABIDJAN, CI
+              <i /> {dict.header.location}
             </span>
             <a
               className="contact-btn"
@@ -210,11 +184,11 @@ export default function Portfolio() {
               data-analytics-category="header"
               data-analytics-label="parlons_ensemble"
             >
-              Parlons ensemble <Arrow size={16} />
+              {dict.header.talkBtn} <Arrow size={16} />
             </a>
             <button
               className="menu-btn"
-              aria-label={menu ? 'Fermer le menu' : 'Ouvrir le menu'}
+              aria-label={menu ? dict.header.closeMenu : dict.header.openMenu}
               aria-expanded={menu}
               onClick={() => setMenu(!menu)}
             >
@@ -226,34 +200,29 @@ export default function Portfolio() {
           <section className="hero" id="accueil" ref={hero}>
             <div className="hero-grid" aria-hidden="true" />
             <div className="hero-meta hero-reveal mono">
-              <span>PORTFOLIO — 2026</span>
-              <span>TECHNOLOGY WITH INTENTION.</span>
+              <span>{dict.hero.metaYear}</span>
+              <span>{dict.hero.metaTag}</span>
             </div>
             <div className="hero-main">
               <div className="hero-text">
                 <h1 className="hero-byline hero-reveal">
                   <span className="tiny-plus">✳</span>
-                  <span>
-                    {site.name.toUpperCase()} — CTO ET FORWARD DEPLOYED ENGINEER À ABIDJAN
-                  </span>
+                  <span>{dict.hero.byline}</span>
                 </h1>
                 <div className="hero-word" aria-label="Engineering tomorrow">
-                  <span className="hero-reveal">Engineering</span>
-                  <span className="hero-reveal accent">tomorrow.</span>
+                  <span className="hero-reveal">{dict.hero.wordFirst}</span>
+                  <span className="hero-reveal accent">{dict.hero.wordSecond}</span>
                 </div>
                 <div className="hero-description hero-reveal">
                   <span className="mono hero-number">[01—∞]</span>
                   <div>
                     <p>
-                      Du terrain à la production.
+                      {dict.hero.taglineLine1}
                       <br />
-                      Des produits utiles. Une IA digne de confiance.
+                      {dict.hero.taglineLine2}
                     </p>
-                    <p className="hero-seo-intro">
-                      Je conçois à Abidjan des produits numériques robustes, de l’architecture
-                      logicielle à l’intelligence artificielle explicable et aux systèmes ML-RAG.
-                    </p>
-                    <span className="mono role-label">CTO · FORWARD DEPLOYED ENGINEER · AI/ML</span>
+                    <p className="hero-seo-intro">{dict.hero.description}</p>
+                    <span className="mono role-label">{dict.hero.role}</span>
                   </div>
                 </div>
                 <div className="hero-cta hero-reveal">
@@ -264,7 +233,7 @@ export default function Portfolio() {
                     data-analytics-category="hero"
                     data-analytics-label="explorer_mes_projets"
                   >
-                    Explorer mes projets <ArrowDown size={17} />
+                    {dict.hero.exploreBtn} <ArrowDown size={17} />
                   </a>
                   <a
                     href={cv}
@@ -274,27 +243,27 @@ export default function Portfolio() {
                     data-analytics-category="hero"
                     data-analytics-label="cv_hero"
                   >
-                    Mon CV <Download size={15} />
+                    {dict.hero.cvBtn} <Download size={15} />
                   </a>
                 </div>
               </div>
               <div className="scene-wrap hero-reveal">
-                <div className="scene-aura" />
                 <Suspense fallback={<div className="scene-loading" />}>
                   {heroVisible && <Scene quiet={quiet || intro} />}
                 </Suspense>
                 <div className="scene-caption mono">
                   <span className="crosshair">+</span>
                   <span>
-                    HUMAN INTENT
-                    <br />× MACHINE INTELLIGENCE
+                    {dict.hero.sceneCaptionTop}
+                    <br />
+                    {dict.hero.sceneCaptionBottom}
                   </span>
                   <span className="scene-coord">
                     05° N<br />
                     04° W
                   </span>
                 </div>
-                <span className="scene-drag mono">INTERACTIVE OBJECT / DRAG TO ROTATE</span>
+                <span className="scene-drag mono">{dict.hero.sceneDrag}</span>
               </div>
             </div>
             <div className="hero-bottom hero-reveal">
@@ -305,12 +274,12 @@ export default function Portfolio() {
                 data-analytics-category="hero"
                 data-analytics-label="scroll_to_explore"
               >
-                <span className="scroll-dot" /> SCROLL TO EXPLORE <ArrowDown size={13} />
+                <span className="scroll-dot" /> {dict.hero.scrollExplore} <ArrowDown size={13} />
               </a>
               <span className="hero-location mono">
-                BASÉ À ABIDJAN.
+                {dict.hero.basedIn}
                 <br />
-                CONNECTÉ AU MONDE.
+                {dict.hero.connectedWorld}
               </span>
               <button
                 className="motion-toggle mono"
@@ -322,7 +291,9 @@ export default function Portfolio() {
                 data-analytics-label={quiet ? 'motion_off' : 'motion_on'}
               >
                 {quiet ? <Play size={13} /> : <Pause size={13} />}
-                <span>MOTION {quiet ? 'OFF' : 'ON'}</span>
+                <span>
+                  {dict.hero.motionToggle} {quiet ? dict.hero.motionOff : dict.hero.motionOn}
+                </span>
               </button>
             </div>
           </section>
@@ -345,16 +316,16 @@ export default function Portfolio() {
             <span className="mono strip-year">2024 — 2026</span>
           </div>
           <nav aria-label="Explorer le portfolio" className="seo-route-nav">
-            <Link href="/a-propos">À propos de Koffi Kan Marc-Ephrem</Link>
-            <Link href="/projets">Toutes les études de cas</Link>
-            <Link href="/recherche">Publications et recherche</Link>
-            <Link href="/journal">Articles du journal</Link>
-            <Link href="/contact">Contact</Link>
+            <Link href={`/${locale}/a-propos`}>{dict.nav.about}</Link>
+            <Link href={`/${locale}/projets`}>{dict.nav.projects}</Link>
+            <Link href={`/${locale}/recherche`}>{dict.nav.research}</Link>
+            <Link href={`/${locale}/journal`}>{dict.nav.journal}</Link>
+            <Link href={`/${locale}/contact`}>{dict.nav.contact}</Link>
           </nav>
-          <Impact quiet={quiet} />
-          <FieldEngineering quiet={quiet} />
-          <ProjectGallery onOpen={setModal} quiet={quiet} />
-          <Research quiet={quiet} />
+          <Impact quiet={quiet} locale={locale} />
+          <FieldEngineering quiet={quiet} locale={locale} />
+          <ProjectGallery onOpen={setModal} quiet={quiet} locale={locale} />
+          <Research quiet={quiet} locale={locale} />
           <section className="about-section section-pad" id="parcours">
             <div className="about-top reveal">
               <span className="mono section-eyebrow">04 / THE PERSON BEHIND THE CODE</span>
@@ -362,11 +333,31 @@ export default function Portfolio() {
             </div>
             <div className="about-intro reveal">
               <h2>
-                Une vision produit.
-                <br />
-                Un esprit d’ingénieur.
-                <br />
-                <span>Une curiosité sans fin.</span>
+                {locale === 'en' ? (
+                  <>
+                    A product vision.
+                    <br />
+                    An engineering mindset.
+                    <br />
+                    <span>Unbounded curiosity.</span>
+                  </>
+                ) : locale === 'es' ? (
+                  <>
+                    Una visión de producto.
+                    <br />
+                    Mente de ingeniero.
+                    <br />
+                    <span>Curiosidad infinita.</span>
+                  </>
+                ) : (
+                  <>
+                    Une vision produit.
+                    <br />
+                    Un esprit d’ingénieur.
+                    <br />
+                    <span>Une curiosité sans fin.</span>
+                  </>
+                )}
               </h2>
               <div className="about-intro-copy">
                 <div className="personal-monogram">
@@ -374,22 +365,39 @@ export default function Portfolio() {
                   <i>↗</i>
                 </div>
                 <p>
-                  Je suis <strong>{site.name}</strong>, CTO, Forward Deployed Engineer et
-                  entrepreneur basé à Abidjan. Je relie les besoins métier à la conception de
-                  produits, aux systèmes distribués et à l’intelligence artificielle.
+                  {locale === 'en' ? (
+                    <>
+                      I am <strong>{site.name}</strong>, CTO, Forward Deployed Engineer and technology leader based in Abidjan. I bridge business imperatives with software craftsmanship, distributed systems, and applied AI.
+                    </>
+                  ) : locale === 'es' ? (
+                    <>
+                      Soy <strong>{site.name}</strong>, CTO, Forward Deployed Engineer y líder tecnológico en Abidyán. Conecto imperativos de negocio con ingeniería de software, sistemas distribuidos e IA aplicada.
+                    </>
+                  ) : (
+                    <>
+                      Je suis <strong>{site.name}</strong>, CTO, Forward Deployed Engineer et entrepreneur basé à Abidjan. Je relie les besoins métier à la conception de produits, aux systèmes distribués et à l’intelligence artificielle.
+                    </>
+                  )}
                 </p>
                 <p>
-                  Mon fil conducteur : partir d’un problème concret, construire avec rigueur, et
-                  garder l’humain au cœur des décisions.
+                  {locale === 'en'
+                    ? 'My North Star: start from human friction, engineer with uncompromising rigor, and keep human agency at the center of every decision.'
+                    : locale === 'es'
+                      ? 'Mi principio rector: partir de la fricción humana, construir con rigor y mantener la agencia humana en el centro.'
+                      : 'Mon fil conducteur : partir d’un problème concret, construire avec rigueur, et garder l’humain au cœur des décisions.'}
                 </p>
                 <a href={site.linkedin} target="_blank" rel="noreferrer" className="text-link">
-                  Faisons connaissance <Arrow />
+                  {locale === 'en' ? "Let's connect" : locale === 'es' ? 'Conectemos' : 'Faisons connaissance'} <Arrow />
                 </a>
               </div>
             </div>
             <div className="career-heading">
-              <span className="mono">PARCOURS PROFESSIONNEL</span>
-              <span className="mono">RÔLE / ORGANISATION / PÉRIODE</span>
+              <span className="mono">
+                {locale === 'en' ? 'CAREER PATH' : locale === 'es' ? 'TRAYECTORIA PROFESIONAL' : 'PARCOURS PROFESSIONNEL'}
+              </span>
+              <span className="mono">
+                {locale === 'en' ? 'ROLE / ORGANIZATION / PERIOD' : locale === 'es' ? 'ROL / ORGANIZACIÓN / PERÍODO' : 'RÔLE / ORGANISATION / PÉRIODE'}
+              </span>
             </div>
             <div className="career-list">
               {experience.map(([date, role, company, desc], i) => (
@@ -424,19 +432,21 @@ export default function Portfolio() {
               ))}
             </div>
             <div className="education reveal">
-              <span className="mono">FORMATION & LEADERSHIP</span>
+              <span className="mono">
+                {locale === 'en' ? 'EDUCATION & LEADERSHIP' : locale === 'es' ? 'FORMACIÓN Y LIDERAZGO' : 'FORMATION & LEADERSHIP'}
+              </span>
               <div>
                 <span className="mono education-date">2021 — 2026</span>
                 <h3>HEC Abidjan</h3>
                 <p>
-                  M2 Informatique de Gestion
+                  {locale === 'en' ? 'MSc in Information Systems & AI' : locale === 'es' ? 'Máster en Sistemas de Información e IA' : 'M2 Informatique de Gestion'}
                   <br />
-                  Intelligence artificielle & Deep Learning
+                  Artificial Intelligence & Deep Learning
                 </p>
                 <small>
-                  Licence : mention très bien · 17/20
+                  {locale === 'en' ? 'Bachelor: Highest Honors · 17/20' : locale === 'es' ? 'Grado: Matrícula de Honor · 17/20' : 'Licence : mention très bien · 17/20'}
                   <br />
-                  Mémoire de M2 en cours
+                  {locale === 'en' ? 'MSc Thesis in progress' : locale === 'es' ? 'Tesis de Máster en curso' : 'Mémoire de M2 en cours'}
                 </small>
               </div>
               <div>
@@ -448,9 +458,11 @@ export default function Portfolio() {
                   Engineering Lead
                 </p>
                 <small>
-                  Direction d’une équipe internationale
-                  <br />
-                  de 5 ingénieurs
+                  {locale === 'en'
+                    ? 'Leading an international cohort of 5 engineers'
+                    : locale === 'es'
+                      ? 'Liderazgo de un equipo internacional de 5 ingenieros'
+                      : 'Direction d’une équipe internationale de 5 ingénieurs'}
                 </small>
               </div>
             </div>
@@ -460,15 +472,33 @@ export default function Portfolio() {
               <div>
                 <span className="mono section-eyebrow">TOOLBOX & MINDSET</span>
                 <h2>
-                  De la profondeur.
-                  <br />
-                  <span className="muted">À chaque couche.</span>
+                  {locale === 'en' ? (
+                    <>
+                      Depth.
+                      <br />
+                      <span className="muted">Across every layer.</span>
+                    </>
+                  ) : locale === 'es' ? (
+                    <>
+                      Profundidad.
+                      <br />
+                      <span className="muted">En cada capa.</span>
+                    </>
+                  ) : (
+                    <>
+                      De la profondeur.
+                      <br />
+                      <span className="muted">À chaque couche.</span>
+                    </>
+                  )}
                 </h2>
               </div>
               <p className="expertise-note">
-                Comprendre le système dans son ensemble.
-                <br />
-                Maîtriser les détails qui font la différence.
+                {locale === 'en'
+                  ? 'Master the macro architecture. Perfect the micro details that make systems resilient.'
+                  : locale === 'es'
+                    ? 'Dominar la arquitectura global. Perfeccionar los detalles que garantizan resiliencia.'
+                    : 'Comprendre le système dans son ensemble. Maîtriser les détails qui font la différence.'}
               </p>
             </div>
             <div className="skills-grid">
@@ -496,23 +526,23 @@ export default function Portfolio() {
               ))}
             </div>
           </section>
-          <Journal quiet={quiet} />
+          <Journal quiet={quiet} locale={locale} />
           <section id="contact" className="contact-section section-pad">
             <Suspense fallback={null}>{!quiet && <ParticleField />}</Suspense>
             <div className="contact-top reveal">
-              <span className="mono section-eyebrow">06 / NEXT CHAPTER</span>
+              <span className="mono section-eyebrow">{dict.contact.eyebrow}</span>
               <span className="mono">
-                <i className="availability-dot" /> PRODUIT · RECHERCHE · COLLABORATION
+                <i className="availability-dot" /> {dict.contact.status}
               </span>
             </div>
             <div className="contact-main reveal">
               <h2>
-                Le prochain projet
+                {dict.contact.heading1}
                 <br />
-                commence par
+                {dict.contact.heading2}
                 <br />
                 <a href={`mailto:${email}`}>
-                  une conversation.
+                  {dict.contact.headingLink}
                   <Arrow size={92} />
                 </a>
               </h2>
@@ -524,7 +554,7 @@ export default function Portfolio() {
                   <button
                     className="copy-btn"
                     onClick={copyEmail}
-                    aria-label="Copier l’adresse e-mail"
+                    aria-label={dict.contact.copyEmail}
                     data-analytics-event="copy_email"
                     data-analytics-category="contact"
                     data-analytics-label="footer_email_copy"
@@ -533,9 +563,9 @@ export default function Portfolio() {
                   </button>
                   <span className="copy-feedback" role="status">
                     {copied
-                      ? 'Adresse copiée'
+                      ? dict.contact.copied
                       : copyError
-                        ? 'Sélectionnez l’adresse pour la copier.'
+                        ? dict.contact.copyError
                         : ''}
                   </span>
                 </div>
@@ -547,7 +577,7 @@ export default function Portfolio() {
                   data-analytics-category="contact"
                   data-analytics-label="footer_cv_download"
                 >
-                  Télécharger mon CV <Download size={16} />
+                  {dict.contact.downloadCV} <Download size={16} />
                 </a>
               </div>
             </div>
@@ -578,9 +608,13 @@ export default function Portfolio() {
                 >
                   LinkedIn <Arrow size={14} />
                 </a>
-                <a href="#accueil">Retour en haut ↑</a>
+                <a href="#accueil">{dict.nav.backToTop}</a>
               </div>
-              <button className="restart-btn" onClick={replay} aria-label="Rejouer l’introduction">
+              <button
+                className="restart-btn"
+                onClick={replay}
+                aria-label={dict.contact.restartIntro}
+              >
                 <span />
                 <span />
                 <span />

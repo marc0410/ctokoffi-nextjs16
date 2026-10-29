@@ -395,10 +395,10 @@
   }
   .scene-wrap {
     position: absolute;
-    width: 55%;
-    height: 100%;
-    right: -7%;
-    top: 0;
+    width: 43%;
+    height: 82%;
+    right: 1%;
+    top: 9%;
     z-index: 2;
   }
   .scene-wrap canvas {
@@ -408,17 +408,10 @@
   .scene-wrap canvas:active {
     cursor: grabbing;
   }
-  .scene-aura {
-    position: absolute;
-    inset: 16% 4%;
-    border-radius: 50%;
-    background: radial-gradient(ellipse, rgba(166, 134, 223, 0.09), transparent 67%);
-    pointer-events: none;
-  }
   .scene-caption {
     position: absolute;
-    right: 20%;
-    top: 15%;
+    right: 12%;
+    top: 10%;
     display: flex;
     gap: 12px;
     align-items: center;
@@ -438,8 +431,8 @@
   }
   .scene-drag {
     position: absolute;
-    bottom: 13%;
-    right: 22%;
+    bottom: 8%;
+    right: 13%;
     font-size: 8px;
     color: #797b71;
     pointer-events: none;
@@ -2142,8 +2135,8 @@
       margin-top: 35px;
     }
     .scene-wrap {
-      right: -2%;
-      width: 53%;
+      right: 1%;
+      width: 43%;
     }
     .project-copy {
       padding: 40px 45px;
@@ -2190,8 +2183,8 @@
       font-size: 9vw;
     }
     .scene-wrap {
-      width: 57%;
-      right: -10%;
+      width: 46%;
+      right: 0;
     }
     .scene-caption {
       top: 10%;
@@ -2287,6 +2280,17 @@
       font-size: 6px;
     }
   }
+  @media (min-width: 761px) and (max-width: 850px) {
+    .scene-wrap {
+      width: 36%;
+      height: 68%;
+      top: 16%;
+    }
+    .scene-caption,
+    .scene-drag {
+      display: none;
+    }
+  }
   @media (max-width: 760px) {
     :root {
       --pad: 24px;
@@ -2358,10 +2362,12 @@
       font-size: 6px;
     }
     .hero-main {
-      display: block;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
       padding-top: 42px;
       padding-bottom: 0;
-      min-height: 680px;
+      min-height: 0;
     }
     .hero-text {
       width: 100%;
@@ -2410,26 +2416,18 @@
       font-size: 10px;
     }
     .scene-wrap {
-      height: 380px;
-      width: 100%;
-      right: -18%;
-      top: 300px;
+      position: relative;
+      height: 270px;
+      width: min(100%, 360px);
+      right: auto;
+      top: auto;
+      align-self: center;
+      margin-top: 16px;
       z-index: 1;
     }
-    .scene-caption {
-      top: 24%;
-      right: auto;
-      left: 0;
-      gap: 8px;
-      font-size: 6px;
-    }
-    .scene-caption .crosshair {
-      font-size: 20px;
-    }
+    .scene-caption,
     .scene-drag {
-      font-size: 6px;
-      bottom: 18%;
-      right: 25%;
+      display: none;
     }
     .hero-bottom {
       gap: 15px;
@@ -2966,14 +2964,13 @@
       min-height: 820px;
     }
     .hero-main {
-      min-height: 650px;
+      min-height: 0;
     }
     .hero-word {
       font-size: 11.4vw;
     }
     .scene-wrap {
-      top: 290px;
-      height: 340px;
+      height: 230px;
     }
     .project-thumbs .mono {
       font-size: 5px;

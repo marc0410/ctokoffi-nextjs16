@@ -1,8 +1,7 @@
 'use client';
-import React, { useRef, useMemo, Suspense, Component } from 'react';
+import React, { useRef, useMemo, useEffect, Suspense, Component } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Environment, Lightformer, Float, OrbitControls } from '@react-three/drei';
-import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import { supportsWebGL } from '@/lib/webgl';
 class SceneBoundary extends Component<{ children: React.ReactNode }, { failed: boolean }> {
@@ -53,10 +52,42 @@ function Sculpture({ quiet }: { quiet: boolean }) {
     }
     return new THREE.CatmullRomCurve3(points, true);
   }, []);
+  const flowTexture = useMemo(() => {
+    const width = 256;
+    const height = 32;
+    const pixels = new Uint8Array(width * height * 4);
+
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const u = x / width;
+        const v = y / height;
+        const wave = Math.sin(Math.PI * 2 * (u * 3 + 0.18 * Math.sin(v * Math.PI * 2)));
+        const streak = Math.pow(Math.max(0, wave), 7);
+        const ripple = Math.sin(Math.PI * 2 * (u * 9 - v * 2));
+        const light = Math.round(18 + 190 * streak + 18 * Math.max(0, ripple));
+        const index = (y * width + x) * 4;
+        pixels[index] = light;
+        pixels[index + 1] = light;
+        pixels[index + 2] = light;
+        pixels[index + 3] = 255;
+      }
+    }
+
+    const texture = new THREE.DataTexture(pixels, width, height, THREE.RGBAFormat);
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.needsUpdate = true;
+    return texture;
+  }, []);
+  const flowTextureRef = useRef(flowTexture);
+  useEffect(() => () => flowTexture.dispose(), [flowTexture]);
   useFrame((state, delta) => {
     if (group.current && !quiet) {
       group.current.rotation.y += delta * 0.1;
       group.current.rotation.z = Math.sin(state.clock.elapsedTime * 0.12) * 0.12;
+      flowTextureRef.current.offset.x = (flowTextureRef.current.offset.x - delta * 0.065) % 1;
     }
   });
   return (
@@ -70,14 +101,11 @@ function Sculpture({ quiet }: { quiet: boolean }) {
             roughness={0.23}
             clearcoat={1}
             clearcoatRoughness={0.14}
+            emissive="#a36be7"
+            emissiveMap={flowTexture}
+            emissiveIntensity={0.65}
           />
         </mesh>
-        {[0, 1, 2].map((i) => (
-          <mesh key={i} rotation={[Math.PI / 2, (i * Math.PI) / 3, 0.5]}>
-            <torusGeometry args={[2.25 + i * 0.13, 0.009, 8, 128]} />
-            <meshBasicMaterial color={i === 1 ? '#ddd5f3' : '#635575'} transparent opacity={0.45} />
-          </mesh>
-        ))}
         <mesh position={[1.9, 0.9, 0.8]}>
           <sphereGeometry args={[0.085, 20, 20]} />
           <meshBasicMaterial color="#e7d4ff" toneMapped={false} />
@@ -143,11 +171,6 @@ export default function Scene({ quiet = false }: { quiet?: boolean }) {
             minPolarAngle={0.4}
             maxPolarAngle={2.7}
           />
-          {!quiet && (
-            <EffectComposer multisampling={0}>
-              <Bloom intensity={0.25} luminanceThreshold={1.1} mipmapBlur />
-            </EffectComposer>
-          )}
         </Canvas>
       </Suspense>
     </SceneBoundary>
